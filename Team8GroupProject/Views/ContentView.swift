@@ -26,6 +26,8 @@ struct SidebarView: View {
 
 // Home menu
 struct HomeView: View {
+    @AppStorage("loggedIn") private var loggedIn = false
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -82,7 +84,20 @@ struct HomeView: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(10)
                 }
+                
+                // Logout button: testing only
+                Spacer().frame(height: 100)
+                
                 .padding(.horizontal)
+                
+                // Logout button: testing only
+                Button("Log Out (Debug)"){
+                    loggedIn = false
+                }
+                .padding()
+                .background(Color(.red))
+                .foregroundColor(.white)
+                .cornerRadius(25)
             }
             .padding(.vertical)
             .navigationTitle("Home")
