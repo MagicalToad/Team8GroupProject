@@ -9,9 +9,16 @@ import SwiftUI
 
 @main
 struct Team8GroupProjectApp: App {
+    @AppStorage("loggedIn") private var loggedIn = false
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // Shows OnBoardingView for first time users
+            if loggedIn {
+                ContentView()
+            } else {
+                OnboardingView()
+            }
         }
     }
 }
