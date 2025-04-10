@@ -18,6 +18,12 @@ struct SidebarView: View {
             NavigationLink(destination: Text("My Activity")) {
                 Label("My Activity", systemImage: "person")
             }
+            NavigationLink(destination: GoalsView()) {
+                Label("My Goals", systemImage: "flag")
+            }
+            NavigationLink(destination: PlannerView()) {
+                Label("My Planner", systemImage: "calendar")
+            }
         }
         .listStyle(SidebarListStyle())
         .navigationTitle("Menu")
