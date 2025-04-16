@@ -52,9 +52,9 @@ struct OnboardingView: View {
                     
                     // Sign In and Sign Up buttons
                     VStack(spacing: 20) {
-                        Button(action: {
-                            loggedIn = true // Testing purposes
-                        }) {
+                        NavigationLink{
+                            SignInView()
+                        } label: {
                             Text("Sign In")
                                 .font(.headline)
                                 .foregroundColor(.black)
@@ -65,9 +65,9 @@ struct OnboardingView: View {
                                 .padding(.horizontal)
                         }
                         
-                        Button(action: {
-                            loggedIn = true // Testing purposes
-                        }) {
+                        NavigationLink{
+                            SignUpView()
+                        } label: {
                             Text("Join Us")
                                 .font(.headline)
                                 .foregroundColor(.black)
@@ -77,6 +77,20 @@ struct OnboardingView: View {
                                 .cornerRadius(25)
                                 .padding(.horizontal)
                         }
+                        
+                        // --- TESTING BYPASS BUTTON START ---
+                        #if DEBUG
+                        Button("Bypass Login (Testing)") {
+                            loggedIn = true
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: 150)
+                        .padding()
+                        .background(Color.red)
+                        .cornerRadius(25)
+                        .padding(.top, 25)
+                        #endif
                     }
                     
                     Spacer()
@@ -84,7 +98,7 @@ struct OnboardingView: View {
                 
                 // For development: links only to ContentView for now
                 .navigationDestination(isPresented: $loggedIn) {
-                    HomeView()
+                    ContentView()
                 }
             }
             .onAppear{
