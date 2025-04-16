@@ -1,10 +1,3 @@
-//
-//  OnBoardingView.swift
-//  Team8GroupProject
-//
-//  Created by Chris Xiong on 3/4/25.
-//
-
 import SwiftUI
 
 struct OnboardingView: View {
@@ -55,7 +48,7 @@ struct OnboardingView: View {
                         NavigationLink{
                             SignInView()
                         } label: {
-                            Text("Sign In")
+                           Text("Sign In")
                                 .font(.headline)
                                 .foregroundColor(.black)
                                 .frame(maxWidth: 150)
@@ -92,13 +85,7 @@ struct OnboardingView: View {
                         .padding(.top, 25)
                         #endif
                     }
-                    
                     Spacer()
-                }
-                
-                // For development: links only to ContentView for now
-                .navigationDestination(isPresented: $loggedIn) {
-                    ContentView()
                 }
             }
             .onAppear{
@@ -107,6 +94,7 @@ struct OnboardingView: View {
         }
     }
 }
+
 #Preview {
     OnboardingView()
 }
