@@ -362,9 +362,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+<<<<<<< HEAD
+		1209FD742DAE1AB400048238 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+=======
 		3B18394C2DA8639D006CF088 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+>>>>>>> main
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 11.11.0;
@@ -373,6 +379,13 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+<<<<<<< HEAD
+		1209FD752DAE1AB400048238 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1209FD742DAE1AB400048238 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+=======
 		3B050DC72DADC69F006A56C6 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3B18394C2DA8639D006CF088 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
@@ -413,6 +426,7 @@
 			package = 3B18394C2DA8639D006CF088 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
 		};
+>>>>>>> main
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3B65537C2D6E652900DA6D1B /* Project object */;

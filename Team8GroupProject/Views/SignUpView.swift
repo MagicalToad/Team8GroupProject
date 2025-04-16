@@ -111,7 +111,7 @@ struct SignUpView: View {
                     logoAnimate = true
                 }
                 .navigationDestination(isPresented: $isSignedUp) {
-                                    ContentView()
+                    ContentView()
                                 }
             }
             .navigationTitle("Sign Up")
