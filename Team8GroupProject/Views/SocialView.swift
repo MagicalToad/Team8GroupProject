@@ -79,12 +79,5 @@ struct ActivityItem: View {
 }
 
 #Preview {
-    NavigationSplitView {
-        SidebarView()
-    } detail: {
-        NavigationStack {
-            SocialView()
-        }
-    }
-
-}
+     SocialView()
+ }

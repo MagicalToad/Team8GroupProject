@@ -1,0 +1,92 @@
+//
+//  WorkoutLogModel.swift
+//  Team8GroupProject
+//
+//  Created by Xiong, Chris on 4/15/25.
+//
+
+import Foundation
+
+// Data Model for a single workout entry
+struct WorkoutLog: Identifiable, Hashable, Codable {
+    let id: UUID
+    let date: Date
+    let type: String
+    let duration: TimeInterval // Total duration in secs
+
+    // Optional fields for specific details based on type
+    let exerciseName: String?
+    let sets: Int?
+    let reps: Int?
+    let weight: Double? // Stored as kg as default for easier conversion if needed
+    let distance: Double? // Stored as km as default for easier conversion if needed
+
+    let notes: String?
+    let iconName: String
+    
+    private var milesPerKm = 0.621371
+    private var kgPerLb = 0.45359237
+    
+    // Default UUID
+    init(id: UUID = UUID(), date: Date, type: String, duration: TimeInterval,
+         exerciseName: String? = nil, sets: Int? = nil, reps: Int? = nil, weight: Double? = nil, distance: Double? = nil, notes: String? = nil,
+         iconName: String) {
+        self.id = id
+        self.date = date
+        self.type = type
+        self.duration = duration
+        self.exerciseName = exerciseName
+        self.sets = sets
+        self.reps = reps
+        self.weight = weight
+        self.distance = distance
+        self.notes = notes
+        self.iconName = iconName
+    }
+
+    // MARK: - Formats of date and duration
+
+    var formattedDate: String {
+        if Calendar.current.isDateInToday(date) { return "Today" }
+        else if Calendar.current.isDateInYesterday(date) { return "Yesterday" }
+        else { return date.formatted(.dateTime.month(.abbreviated).day()) }
+    }
+
+    var formattedDuration: String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute]
+        formatter.unitsStyle = .abbreviated
+        formatter.zeroFormattingBehavior = .dropLeading
+        return formatter.string(from: duration) ?? ""
+    }
+
+    // Display list row
+    var displaySummary: String {
+         var parts: [String] = []
+        
+        // Name
+        if let exerciseName = exerciseName, !exerciseName.isEmpty { parts.append(exerciseName) }
+        
+        // Sets/Reps
+        if let sets = sets, let reps = reps { parts.append("\(sets)x\(reps)") }
+        
+        // Weights
+        if let weightKg = weight, weightKg > 0 {
+                let weightLbs = weightKg * 2.2046237 // Conversion to pounds
+                parts.append("\(weightLbs.formatted(.number.precision(.fractionLength(1))))kg")
+              }
+        
+        // Distance
+        if let distanceKm = distance, distanceKm > 0 {
+               let distanceMiles = distanceKm * milesPerKm // Convert km to miles
+               parts.append("\(distanceMiles.formatted(.number.precision(.fractionLength(1)))) miles") // Display miles
+           }
+        
+        // Notes
+         if let notes = notes, !notes.isEmpty { parts.append("Notes: \(notes)")}
+
+         if parts.isEmpty { return notes ?? type }
+
+         return parts.joined(separator: " / ")
+     }
+}
