@@ -15,6 +15,7 @@
 
 import SwiftUI
 import FirebaseAuth
+import FirebaseFirestore
 
 struct SignUpView: View {
     @State private var logoAnimate = false
@@ -125,14 +126,21 @@ struct SignUpView: View {
             errorMessage = "Passwords do not match"
             return
         }
-        
+
         Auth.auth().createUser(withEmail: email, password: password) { result, error in
             if let error = error {
                 errorMessage = error.localizedDescription
-            } else {
-                // Handle successful sign-up here (e.g., navigate to the next screen)
-                // For now, we're just printing success
-                print("User signed up: \(result?.user.email ?? "")")
+            } else if let user = result?.user {
+                let db = Firestore.firestore()
+                db.collection("users").document(user.uid).setData([
+                    "email": email
+                ]) { error in
+                    if let error = error {
+                        print("Error writing user to Firestore: \(error.localizedDescription)")
+                    } else {
+                        print("User signed up and added to Firestore: \(email)")
+                    }
+                }
             }
         }
     }

@@ -33,8 +33,7 @@ struct PlannerView: View {
         let calendar = Calendar.current
         let now = Date()
         
-        // Filter plans: Only include those whose scheduled date is in the future (or later today).
-        // This ensures that if the plan time for today has passed, it won't be considered.
+        
         let upcomingPlans = planStore.plans.compactMap { plan -> (plan: Plan, scheduled: Date)? in
             if let scheduled = scheduledDate(for: plan), scheduled >= now {
                 return (plan, scheduled)
@@ -42,7 +41,6 @@ struct PlannerView: View {
             return nil
         }
         
-        // If there is no upcoming plan, show a default message.
         guard let nextPlan = upcomingPlans.min(by: { $0.scheduled < $1.scheduled }) else {
             return "No upcoming plans"
         }
@@ -50,7 +48,6 @@ struct PlannerView: View {
         let plan = nextPlan.plan
         let scheduled = nextPlan.scheduled
         
-        // Check if the scheduled date is today.
         if calendar.isDate(scheduled, inSameDayAs: now) {
             let formatter = DateFormatter()
             formatter.dateFormat = "h:mm a"
@@ -64,7 +61,6 @@ struct PlannerView: View {
                 return "You have a \(plan.selectedPlan) Session Today at \(formatter.string(from: scheduled))"
             }
         } else {
-            // If not today, calculate how many days away it is.
             let diffComponents = calendar.dateComponents([.day], from: now, to: scheduled)
             let daysAway = diffComponents.day ?? 0
             if plan.selectedPlan == "Workout" {
@@ -79,7 +75,6 @@ struct PlannerView: View {
         }
     }
     
-    // MARK: - Weekly Schedule Computation (for simple weekly buttons)
     var currentWeek: [(abbreviation: String, day: Int)] {
         let calendar = Calendar.current
         guard let weekStart = Date().startOfWeek(using: calendar) else { return [] }
@@ -96,7 +91,6 @@ struct PlannerView: View {
         return weekDays
     }
     
-    // Helper function: returns true if there's at least one plan for a specific day.
     func hasPlan(for day: Int) -> Bool {
         planStore.plans.contains { $0.selectedDay == day }
     }
@@ -111,7 +105,7 @@ struct PlannerView: View {
                         .padding(.bottom, 5)
                     
                     HStack {
-                        Image(systemName: "figure.run")
+                        Image(systemName: "bell.circle.fill")
                             .font(.title)
                         VStack(alignment: .leading) {
                             Text(reminderText)
@@ -309,6 +303,7 @@ struct DayDetailsView: View {
             Spacer()
         }
         .navigationTitle("Plan for Day \(selectedDay)")
+        
     }
     
     // Filter plans for the selected day sorted by time.
@@ -359,7 +354,7 @@ struct AddPlansView: View {
     @State private var feedbackMessage = ""
     
     @EnvironmentObject var planStore: PlanStore
-    @Environment(\.dismiss) var dismiss  // For dismissing the view
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {

@@ -19,6 +19,7 @@ struct SidebarView: View {
             SidebarButton(title: "My Activity", systemImage: "figure.walk", target: .activity, selection: $selectedCategory, action: onSelectItem)
             SidebarButton(title: "My Goals", systemImage: "flag", target: .goals, selection: $selectedCategory, action: onSelectItem)
             SidebarButton(title: "My Planner", systemImage: "calendar", target: .planner, selection: $selectedCategory, action: onSelectItem)
+            SidebarButton(title: "Social", systemImage: "person.2.fill", target: .social, selection: $selectedCategory, action: onSelectItem)
         }
         .listStyle(.sidebar)
     }

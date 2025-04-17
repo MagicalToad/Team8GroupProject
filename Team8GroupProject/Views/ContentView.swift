@@ -13,10 +13,14 @@ enum NavigationTarget: Hashable {
     case activity
     case goals
     case planner
+    case social
 }
+
+
 
 // ContentView
 struct ContentView: View {
+    @EnvironmentObject var planStore: PlanStore
     @State private var isSidebarVisible = false
     @State private var selectedCategory: NavigationTarget? = .home
     @StateObject private var activityViewModel = ActivityViewModel()
@@ -70,6 +74,7 @@ struct ContentView: View {
 
 // CurrentDetailView AKA Home
 struct CurrentDetailView: View {
+    @EnvironmentObject var planStore: PlanStore
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @Binding var selectedCategory: NavigationTarget?
     var toggleSidebar: () -> Void
@@ -131,7 +136,7 @@ struct CurrentDetailView: View {
                                     .font(.headline)
                                     .padding([.leading, .top])
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text("Example activity from a friend.") // dummy data --- needs replace
+                                    Text(planStore.plans.isEmpty ? "No reminders yet" : PlanUtilities.getReminderText(plans: planStore.plans)) // dummy data --- needs replace
                                         .font(.footnote)
                                 }
                                 .padding()
@@ -197,6 +202,8 @@ struct CurrentDetailView: View {
                     GoalsView()
                 case .planner:
                     PlannerView()
+                case .social:
+                    AddFriendView()
                 case nil:
                     Text("Select an item") // Fallback view
                 }
@@ -223,6 +230,7 @@ struct CurrentDetailView: View {
         case .activity: return "My Activity"
         case .goals: return "My Goals"
         case .planner: return "My Planner"
+        case .social: return "Social"
         case nil: return "Welcome"
         }
     }
@@ -234,6 +242,7 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .environmentObject(ActivityViewModel());
+            
     }
 }
 

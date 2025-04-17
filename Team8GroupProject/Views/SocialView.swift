@@ -6,78 +6,172 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
+import Combine
 
-struct SocialView: View {
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Share Your Activity Button
-                Button(action: {
-                    print("Activity Button Clicked!")
-                }) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Share Your Activity")
-                            .font(.headline)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+
+
+// MARK: - Models
+struct UserModel: Identifiable, Codable {
+    @DocumentID var id: String?
+    var email: String
+}
+
+struct ActivityModel: Identifiable, Codable {
+    @DocumentID var id: String?
+    var userId: String
+    var message: String
+    var timestamp: Date
+}
+
+
+class FriendManager: ObservableObject {
+    private let db = Firestore.firestore()
+    
+    @Published var friendEmailInput: String = ""
+    @Published var friendsEmails: [String] = []
+    @Published var errorMessage: String?
+
+    func fetchFriends() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        db.collection("users").document(uid).collection("friends")
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    self.errorMessage = "Error fetching friends: \(error.localizedDescription)"
+                    return
                 }
-                .padding(.horizontal)
-                .padding(.top)
                 
-                // Friends Activity Feed
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Friend Activity")
-                        .font(.title2.bold())
-                        .foregroundColor(.white)
-                        .padding(.horizontal)
-                    
-                    // Example Activity Items
-                    VStack(spacing: 16) {
-                        ActivityItem(message: "Friend Alex has run 5 miles today")
-                        ActivityItem(message: "Friend Sam has completed their goal of 10 workouts this month")
-                    }
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
+                self.friendsEmails = snapshot?.documents.compactMap { $0.data()["email"] as? String } ?? []
             }
+    }
+
+    func addFriendByEmail() {
+        let emailToAdd = friendEmailInput.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard let currentUserUID = Auth.auth().currentUser?.uid else { return }
+        guard emailToAdd != Auth.auth().currentUser?.email?.lowercased() else {
+            self.errorMessage = "You can't add yourself."
+            return
         }
-        .navigationTitle("Social")
-        .toolbarColorScheme(.dark, for: .navigationBar) // Force dark mode
-        .toolbarBackground(Color.black, for: .navigationBar) // Black background
-        .toolbarBackground(.visible, for: .navigationBar)
-        .background(Color.black.edgesIgnoringSafeArea(.all))
+
+        db.collection("users")
+            .whereField("email", isEqualTo: emailToAdd)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    self.errorMessage = "Lookup failed: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let document = snapshot?.documents.first else {
+                    self.errorMessage = "No user with that email found."
+                    return
+                }
+
+                let friendUID = document.documentID
+
+                let friendData = [
+                    "email": emailToAdd,
+                    "uid": friendUID
+                ]
+
+                self.db.collection("users")
+                    .document(currentUserUID)
+                    .collection("friends")
+                    .document(friendUID)
+                    .setData(friendData) { error in
+                        if let error = error {
+                            self.errorMessage = "Failed to add friend: \(error.localizedDescription)"
+                        } else {
+                            self.friendEmailInput = ""
+                            self.errorMessage = nil
+                        }
+                    }
+            }
+    }
+
+    func removeFriend(uid: String) {
+        guard let currentUserUID = Auth.auth().currentUser?.uid else { return }
+
+        db.collection("users")
+            .document(currentUserUID)
+            .collection("friends")
+            .document(uid)
+            .delete { error in
+                if let error = error {
+                    self.errorMessage = "Failed to remove friend: \(error.localizedDescription)"
+                }
+            }
     }
 }
 
-struct ActivityItem: View {
-    let message: String
+
+struct AddFriendView: View {
+    @StateObject private var manager = FriendManager()
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Circle()
-                .frame(width: 40, height: 40)
-                .foregroundColor(.blue.opacity(0.3))
-                .overlay(
-                    Image(systemName: "person.fill")
-                        .foregroundColor(.blue)
-                )
+        VStack(spacing: 20) {
+            Text("Add a Friend")
+                .font(.title2.bold())
+                .padding(.top)
             
-            Text(message)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .multilineTextAlignment(.leading)
+            TextField("Enter friend's email", text: $manager.friendEmailInput)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+
+            Button(action: {
+                manager.addFriendByEmail()
+            }) {
+                Text("Add Friend")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .padding(.horizontal)
+
+            if let error = manager.errorMessage {
+                Text(error)
+                    .foregroundColor(.red)
+                    .padding(.horizontal)
+            }
+
+            Divider().padding(.vertical)
+
+            Text("Your Friends")
+                .font(.headline)
+
+            List {
+                ForEach(manager.friendsEmails, id: \.self) { email in
+                    HStack {
+                        Text(email)
+                        Spacer()
+                        Button(action: {
+                            // Look up UID by email and remove it
+                            self.removeFriendByEmail(email: email, manager: manager)
+                        }) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
         }
-        .padding()
-        .background(Color.blue.opacity(0.1))
-        .cornerRadius(12)
+        .onAppear {
+            manager.fetchFriends()
+        }
+    }
+
+    private func removeFriendByEmail(email: String, manager: FriendManager) {
+        let db = Firestore.firestore()
+        db.collection("users")
+            .whereField("email", isEqualTo: email)
+            .getDocuments { snapshot, error in
+                guard let document = snapshot?.documents.first else { return }
+                let uid = document.documentID
+                manager.removeFriend(uid: uid)
+            }
     }
 }
 
-#Preview {
-     SocialView()
- }
