@@ -1,3 +1,4 @@
+import Foundation
 struct PlanUtilities {
     static func getReminderText(plans: [Plan], now: Date = Date()) -> String {
         let calendar = Calendar.current
