@@ -85,27 +85,6 @@ struct ActivityView: View {
     }
 }
 
-// MARK: - ActivityRow
-struct ActivityRow: View {
-    let workout: WorkoutLog
-    var body: some View {
-        HStack(alignment: .top, spacing: 15) {
-            Image(systemName: workout.iconName)
-                .font(.title2)
-                .foregroundColor(.accentColor)
-                .frame(width: 35, alignment: .leading)
-            VStack(alignment: .leading) {
-                Text(workout.type).font(.headline)
-                Text(workout.displaySummary).font(.subheadline).foregroundColor(.secondary).lineLimit(2)
-            }
-            Spacer()
-            Text(workout.formattedDuration).font(.subheadline).foregroundColor(.secondary)
-        }
-        .padding(.vertical, 8)
-    }
-}
-
-
 // MARK: - Preview
 #Preview {
     NavigationStack {
