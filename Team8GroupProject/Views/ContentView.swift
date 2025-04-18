@@ -9,10 +9,7 @@ import SwiftUI
 
 // Navigation Target
 enum NavigationTarget: Hashable {
-    case home
-    case activity
-    case goals
-    case planner
+    case home, activity, goals, planner
 }
 
 // ContentView
@@ -20,17 +17,18 @@ struct ContentView: View {
     @State private var isSidebarVisible = false
     @State private var selectedCategory: NavigationTarget? = .home
     @StateObject private var activityViewModel = ActivityViewModel()
-    
+    @StateObject private var goalsViewModel = GoalsViewModel()
+
     private let sidebarWidth: CGFloat = UIScreen.main.bounds.width * 0.75
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                
                 // Main Content Area
                 CurrentDetailView(selectedCategory: $selectedCategory, toggleSidebar: toggleSidebar)
                     .environmentObject(activityViewModel)
-                
+                    .environmentObject(goalsViewModel)
+
                 // Dims when sidebar is showing
                 if isSidebarVisible {
                     Color.black.opacity(0.5)
@@ -39,7 +37,7 @@ struct ContentView: View {
                         .transition(.opacity)
                         .zIndex(1)
                 }
-                
+
                 // Sidebar
                 SidebarView(selectedCategory: $selectedCategory, onSelectItem: toggleSidebar)
                     .frame(width: sidebarWidth)
@@ -47,7 +45,6 @@ struct ContentView: View {
                     .offset(x: isSidebarVisible ? 0 : -sidebarWidth)
                     .transition(.move(edge: .leading))
                     .zIndex(2)
-                
             }
             .animation(.easeInOut, value: isSidebarVisible)
             .gesture(
@@ -62,7 +59,7 @@ struct ContentView: View {
             )
         }
     }
-    
+
     func toggleSidebar() {
         isSidebarVisible.toggle()
     }
@@ -71,43 +68,64 @@ struct ContentView: View {
 // CurrentDetailView AKA Home
 struct CurrentDetailView: View {
     @EnvironmentObject var activityViewModel: ActivityViewModel
+    @EnvironmentObject var goalsViewModel: GoalsViewModel
     @Binding var selectedCategory: NavigationTarget?
     var toggleSidebar: () -> Void
-    
+
     @AppStorage("loggedIn") private var loggedIn = false // Log-in state
-    
-    // Dummy data of 10% --- Needs replaced with dynamic data
-    @State private var goalProgress_merged: CGFloat = 0.1
-    
+
     var body: some View {
         NavigationStack {
             Group {
                 switch selectedCategory {
                 case .home:
                     ScrollView {
-                        VStack(spacing: 15) { // Main stack for home content
-                            
-                            // Goals
-                            VStack {
-                                Text("Goal 1") // Dummy data --- needs to be replaced with dynamic data
+                        VStack(spacing: 15) {
+
+                            VStack(alignment: .leading) {
+                                Text("My Goals")
                                     .font(.headline)
-                                ZStack {
-                                    Circle()
-                                        .stroke(lineWidth: 8)
-                                        .foregroundColor(.blue.opacity(0.3))
-                                    Circle()
-                                        .trim(from: 0, to: goalProgress_merged)
-                                        .stroke(style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                                        .foregroundColor(.blue)
-                                        .rotationEffect(Angle(degrees: -90))
-                                    Text("\(Int(goalProgress_merged * 100))%")
-                                        .font(.title.bold())
-                                        .contentTransition(.numericText())
+                                    .padding(.horizontal)
+
+                                if goalsViewModel.goals.isEmpty {
+                                    Text("No goals yet")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .padding(.horizontal)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 20) {
+                                            ForEach(goalsViewModel.goals) { goal in
+                                                VStack(spacing: 8) {
+                                                    Text(goal.title)
+                                                        .font(.subheadline.bold())
+                                                        .multilineTextAlignment(.center)
+                                                    ZStack {
+                                                        Circle()
+                                                            .stroke(lineWidth: 6)
+                                                            .foregroundColor(.blue.opacity(0.3))
+                                                        Circle()
+                                                            .trim(from: 0, to: CGFloat(goal.progress) / 100)
+                                                            .stroke(style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                                            .foregroundColor(.blue)
+                                                            .rotationEffect(.degrees(-90))
+                                                    }
+                                                    .frame(width: 60, height: 60)
+                                                    Text("\(goal.progress)%")
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .padding()
+                                                .background(Color(.systemGray6))
+                                                .cornerRadius(15)
+                                            }
+                                        }
+                                        .padding(.horizontal)
+                                    }
                                 }
-                                .frame(width: 150, height: 100)
-                                .padding()
                             }
-                            
+                            .padding(.top)
+
                             // Reminders
                             VStack(alignment: .leading) {
                                 Text("Reminders")
@@ -116,7 +134,6 @@ struct CurrentDetailView: View {
                                 HStack {
                                     Image(systemName: "bell.fill").foregroundColor(.yellow)
                                     Text("Example reminder")
-                                    
                                     Spacer()
                                 }
                                 .padding()
@@ -124,14 +141,14 @@ struct CurrentDetailView: View {
                                 .cornerRadius(10)
                             }
                             .padding(.horizontal)
-                            
-                            // Friend activity
+
+                            // Friend Activity
                             VStack(alignment: .leading) {
                                 Text("Friend Activity")
                                     .font(.headline)
                                     .padding([.leading, .top])
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text("Example activity from a friend.") // dummy data --- needs replace
+                                    Text("Example activity from a friend.")
                                         .font(.footnote)
                                 }
                                 .padding()
@@ -140,33 +157,28 @@ struct CurrentDetailView: View {
                                 .cornerRadius(10)
                             }
                             .padding(.horizontal)
-                            
-                            // Activity
+
+                            // Recent Workouts
                             VStack(alignment: .leading) {
                                 HStack {
                                     Text("Recent Activity")
                                         .font(.headline)
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(.white)
                                     Spacer()
                                 }
                                 .padding(.bottom, 5)
-                                
+
                                 if activityViewModel.workouts.isEmpty {
                                     Text("No workouts logged yet.")
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(.white)
                                         .padding(.vertical)
                                         .frame(maxWidth: .infinity, alignment: .center)
-                                    
                                 } else {
-                                    // Display first 3 workouts with ActivityRow component
                                     ForEach(activityViewModel.workouts.prefix(3)) { workout in
-                                        
                                         VStack(alignment: .leading, spacing: 0) {
                                             ActivityRow(workout: workout)
-
                                             if workout.id != activityViewModel.workouts.prefix(3).last?.id {
-                                                Divider()
-                                                    .padding(.leading)
+                                                Divider().padding(.leading)
                                             }
                                         }
                                     }
@@ -176,21 +188,18 @@ struct CurrentDetailView: View {
                             .background(Color(.black))
                             .cornerRadius(10)
                             .padding(.horizontal)
-                            
+
                             Spacer(minLength: 50)
-                            
-                            // LOG OUT BUTTON - FOR TESTING
-                            Button("Log Out (Debug)", role: .destructive){
+
+                            // Log Out (Debug)
+                            Button("Log Out (Debug)", role: .destructive) {
                                 loggedIn = false
                             }
                             .padding()
                             .buttonStyle(.borderedProminent)
-                            // --- End Logout Button ---
-                            
-                        } // End Main VStack for Home
-                        .padding(.vertical) // Padding at top/bottom of scroll content
-                    } // End ScrollView for Home
-                    
+                        }
+                        .padding(.vertical)
+                    }
                 case .activity:
                     ActivityView()
                 case .goals:
@@ -198,16 +207,14 @@ struct CurrentDetailView: View {
                 case .planner:
                     PlannerView()
                 case nil:
-                    Text("Select an item") // Fallback view
+                    Text("Select an item")
                 }
             }
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        toggleSidebar()
-                    } label: {
+                    Button { toggleSidebar() } label: {
                         Image(systemName: "line.3.horizontal")
                     }
                 }
@@ -215,8 +222,7 @@ struct CurrentDetailView: View {
         }
         .tint(Color.primary)
     }
-    
-    // Navigation titles
+
     private var navigationTitle: String {
         switch selectedCategory {
         case .home: return "Home"
@@ -228,12 +234,11 @@ struct CurrentDetailView: View {
     }
 }
 
-
 // MARK: - Previews
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-            .environmentObject(ActivityViewModel());
+            .environmentObject(ActivityViewModel())
+            .environmentObject(GoalsViewModel())
     }
 }
-
