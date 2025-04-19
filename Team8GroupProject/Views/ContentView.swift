@@ -77,12 +77,14 @@ struct CurrentDetailView: View {
     @EnvironmentObject var planStore: PlanStore
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @Binding var selectedCategory: NavigationTarget?
-    var toggleSidebar: () -> Void
+    @StateObject private var goalsViewModel = GoalsViewModel()
     
     @AppStorage("loggedIn") private var loggedIn = false // Log-in state
     
     // Dummy data of 10% --- Needs replaced with dynamic data
     @State private var goalProgress_merged: CGFloat = 0.1
+    
+    var toggleSidebar: () -> Void
     
     var body: some View {
         NavigationStack {
@@ -200,6 +202,7 @@ struct CurrentDetailView: View {
                     ActivityView()
                 case .goals:
                     GoalsView()
+                        .environmentObject(goalsViewModel)
                 case .planner:
                     PlannerView()
                 case .social:
