@@ -10,7 +10,7 @@
 import SwiftUI
 
 struct ActivityRow: View {
-    let workout: WorkoutLog // Assumes WorkoutLog struct is defined elsewhere
+    let workout: WorkoutLog
     var body: some View {
         HStack(alignment: .top, spacing: 15) {
             Image(systemName: workout.iconName)
@@ -19,7 +19,6 @@ struct ActivityRow: View {
                 .frame(width: 35, alignment: .leading)
             VStack(alignment: .leading) {
                 Text(workout.type).font(.headline)
-                // Use displaySummary here now
                 Text(workout.displaySummary).font(.subheadline).foregroundColor(.secondary).lineLimit(3)
             }
             Spacer()
@@ -34,5 +33,6 @@ struct ActivityRow: View {
 #Preview {
     NavigationStack {
         ActivityView()
+            .environmentObject(ActivityViewModel())
     }
 }

@@ -79,7 +79,7 @@ struct WorkoutLog: Identifiable, Hashable, Codable {
         // Weights
         if let weightKg = weight, weightKg > 0 {
                 let weightLbs = weightKg * 2.2046237 // Conversion to pounds
-                parts.append("\(weightLbs.formatted(.number.precision(.fractionLength(1))))kg")
+                parts.append("\(Int(weightLbs)) lbs") // Display pounds
               }
         
         // Distance
