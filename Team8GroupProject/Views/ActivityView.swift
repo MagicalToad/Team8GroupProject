@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ActivityView: View {
-    @StateObject private var viewModel = ActivityViewModel()
+    @EnvironmentObject var viewModel: ActivityViewModel
     @State private var showingAddSheet = false
     
     // Sort workouts
@@ -35,7 +35,7 @@ struct ActivityView: View {
                         
                         Section {
                             ForEach(groupedWorkouts[date]!, id: \.id) { workout in
-                                ActivityRow(workout: workout) // Existing row view
+                                ActivityRow(workout: workout)
                             }
                             // Delete workouts
                             .onDelete { indexSet in
@@ -47,11 +47,13 @@ struct ActivityView: View {
                                 .font(.title3)
                                 .bold()
                         }
+                        .listSectionSeparator(.hidden)
                     }
                 }
                 .listStyle(.insetGrouped)
             }
         }
+        
         // Add workout toolbar
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -66,28 +68,38 @@ struct ActivityView: View {
         .sheet(isPresented: $showingAddSheet) {
             AddWorkoutView(viewModel: viewModel)
         }
+        // Manual refresh
+        .refreshable {
+            print("ActivityView refreshable triggered.")
+            viewModel.refreshData() // Call refresh func from viewModel
+        }
+        .onChange(of: viewModel.workouts) { _, newCount in
+            print("ActivityView: viewModel.workouts changed. New count: \(newCount.count)")
+        }
     }
     
-    // Helper function for .delete modifier
-    private func deleteItems(at offsets: IndexSet, from workoutList: [WorkoutLog]) {
-        // Create set of IDs to delete
-        var idsToDelete = Set<UUID>()
-        for index in offsets {
-            if index < workoutList.count {
-                idsToDelete.insert(workoutList[index].id)
+        // Helper function for .delete modifier
+        private func deleteItems(at offsets: IndexSet, from workoutList: [WorkoutLog]) {
+            // Create set of IDs to delete
+            var idsToDelete = Set<String>()
+            
+            for index in offsets {
+                if index < workoutList.count, let docId = workoutList[index].id {
+                    idsToDelete.insert(docId)
+                }
+            }
+            
+            // Call ViewModel's delete function with set of IDs
+            if !idsToDelete.isEmpty {
+                viewModel.deleteWorkouts(idsToDelete: idsToDelete)
             }
         }
-        
-        // Call ViewModel's delete function with set of IDs
-        if !idsToDelete.isEmpty {
-            viewModel.deleteWorkouts(idsToDelete: idsToDelete)
+    }
+    
+    // MARK: - Preview
+    #Preview {
+        NavigationStack {
+            ActivityView()
+                .environmentObject(ActivityViewModel())
         }
     }
-}
-
-// MARK: - Preview
-#Preview {
-    NavigationStack {
-        ActivityView()
-    }
-}

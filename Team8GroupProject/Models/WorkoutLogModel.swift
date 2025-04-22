@@ -6,10 +6,13 @@
 //
 
 import Foundation
+import FirebaseFirestore // Required for Timestamp
 
 // Data Model for a single workout entry
 struct WorkoutLog: Identifiable, Hashable, Codable {
-    let id: UUID
+    
+    @DocumentID var id: String?
+    
     let date: Date
     let type: String
     let duration: TimeInterval // Total duration in secs
@@ -20,18 +23,19 @@ struct WorkoutLog: Identifiable, Hashable, Codable {
     let reps: Int?
     let weight: Double? // Stored as kg as default for easier conversion if needed
     let distance: Double? // Stored as km as default for easier conversion if needed
-
     let notes: String?
     let iconName: String
+    
+    let userId: String?
     
     private var milesPerKm = 0.621371
     private var kgPerLb = 0.45359237
     
-    // Default UUID
-    init(id: UUID = UUID(), date: Date, type: String, duration: TimeInterval,
-         exerciseName: String? = nil, sets: Int? = nil, reps: Int? = nil, weight: Double? = nil, distance: Double? = nil, notes: String? = nil,
-         iconName: String) {
-        self.id = id
+    // Custom initializer
+    init(date: Date, type: String, duration: TimeInterval,
+         exerciseName: String? = nil, sets: Int? = nil, reps: Int? = nil,
+         weight: Double? = nil, distance: Double? = nil, notes: String? = nil,
+         iconName: String, userId: String?) {
         self.date = date
         self.type = type
         self.duration = duration
@@ -42,7 +46,9 @@ struct WorkoutLog: Identifiable, Hashable, Codable {
         self.distance = distance
         self.notes = notes
         self.iconName = iconName
+        self.userId = userId
     }
+    
 
     // MARK: - Formats of date and duration
 

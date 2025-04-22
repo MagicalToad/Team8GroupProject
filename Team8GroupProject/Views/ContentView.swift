@@ -16,11 +16,9 @@ enum NavigationTarget: Hashable {
     case social
 }
 
-
-
 // ContentView
 struct ContentView: View {
-    @EnvironmentObject var planStore: PlanStore
+    @StateObject var planStore = PlanStore()
     @State private var isSidebarVisible = false
     @State private var selectedCategory: NavigationTarget? = .home
     @StateObject private var activityViewModel = ActivityViewModel()
@@ -34,6 +32,7 @@ struct ContentView: View {
                 // Main Content Area
                 CurrentDetailView(selectedCategory: $selectedCategory, toggleSidebar: toggleSidebar)
                     .environmentObject(activityViewModel)
+                    .environmentObject(planStore)
                 
                 // Dims when sidebar is showing
                 if isSidebarVisible {
@@ -51,6 +50,7 @@ struct ContentView: View {
                     .offset(x: isSidebarVisible ? 0 : -sidebarWidth)
                     .transition(.move(edge: .leading))
                     .zIndex(2)
+                    .environmentObject(activityViewModel)
                 
             }
             .animation(.easeInOut, value: isSidebarVisible)
@@ -65,6 +65,7 @@ struct ContentView: View {
                     }
             )
         }
+        
     }
     
     func toggleSidebar() {
@@ -192,6 +193,8 @@ struct CurrentDetailView: View {
                             }
                             .padding()
                             .buttonStyle(.borderedProminent)
+                            .foregroundColor(.white)
+                            .colorScheme(.light)
                             // --- End Logout Button ---
                             
                         } // End Main VStack for Home
@@ -245,7 +248,6 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .environmentObject(ActivityViewModel());
-            
     }
 }
 
