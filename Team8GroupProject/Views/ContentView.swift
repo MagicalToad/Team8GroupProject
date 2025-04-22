@@ -140,7 +140,7 @@ struct CurrentDetailView: View {
                                     .padding(.bottom, 5)
                                 HStack {
                                     Image(systemName: "bell.fill").foregroundColor(.yellow)
-                                    Text("Example reminder")
+                                    Text(planStore.plans.isEmpty ? "No reminders yet" : PlanUtilities.getReminderText(plans: planStore.plans))
                                     
                                     Spacer()
                                 }
@@ -156,7 +156,7 @@ struct CurrentDetailView: View {
                                     .font(.headline)
                                     .padding([.leading, .top])
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text(planStore.plans.isEmpty ? "No reminders yet" : PlanUtilities.getReminderText(plans: planStore.plans)) // dummy data --- needs replace
+                                    Text("Example Text") // dummy data --- needs replace
                                         .font(.footnote)
                                 }
                                 .padding()
@@ -226,7 +226,7 @@ struct CurrentDetailView: View {
                 case .planner:
                     PlannerView()
                 case .social:
-                    AddFriendView()
+                    SocialView()
                 case nil:
                     Text("Select an item") // Fallback view
                 }

@@ -8,9 +8,8 @@
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
+
 import Combine
-
-
 
 // MARK: - Models
 struct UserModel: Identifiable, Codable {
@@ -21,11 +20,20 @@ struct UserModel: Identifiable, Codable {
 struct ActivityModel: Identifiable, Codable {
     @DocumentID var id: String?
     var userId: String
+    var category: String
     var message: String
     var timestamp: Date
 }
 
+enum ActivityCategory: String, CaseIterable, Identifiable {
+    case goalReached = "Goal Reached"
+    case achievement = "Achievement"
+    case activity = "Activity"
+    
+    var id: String { self.rawValue }
+}
 
+// MARK: - Managers
 class FriendManager: ObservableObject {
     private let db = Firestore.firestore()
     
@@ -35,14 +43,12 @@ class FriendManager: ObservableObject {
 
     func fetchFriends() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
         db.collection("users").document(uid).collection("friends")
             .addSnapshotListener { snapshot, error in
                 if let error = error {
                     self.errorMessage = "Error fetching friends: \(error.localizedDescription)"
                     return
                 }
-                
                 self.friendsEmails = snapshot?.documents.compactMap { $0.data()["email"] as? String } ?? []
             }
     }
@@ -62,12 +68,10 @@ class FriendManager: ObservableObject {
                     self.errorMessage = "Lookup failed: \(error.localizedDescription)"
                     return
                 }
-
                 guard let document = snapshot?.documents.first else {
                     self.errorMessage = "No user with that email found."
                     return
                 }
-
                 let friendUID = document.documentID
 
                 let friendData = [
@@ -92,7 +96,6 @@ class FriendManager: ObservableObject {
 
     func removeFriend(uid: String) {
         guard let currentUserUID = Auth.auth().currentUser?.uid else { return }
-
         db.collection("users")
             .document(currentUserUID)
             .collection("friends")
@@ -105,7 +108,31 @@ class FriendManager: ObservableObject {
     }
 }
 
+class ActivityManager: ObservableObject {
+    private let db = Firestore.firestore()
+    @Published var errorMessage: String?
 
+    func postActivity(category: String, message: String) {
+        guard let user = Auth.auth().currentUser else {
+            self.errorMessage = "User not authenticated."
+            return
+        }
+        let newActivity = ActivityModel(
+            userId: user.uid,
+            category: category,
+            message: message,
+            timestamp: Date()
+        )
+        do {
+            _ = try db.collection("activities").addDocument(from: newActivity)
+            self.errorMessage = nil
+        } catch {
+            self.errorMessage = "Failed to post activity: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Views
 struct AddFriendView: View {
     @StateObject private var manager = FriendManager()
     
@@ -119,9 +146,7 @@ struct AddFriendView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
 
-            Button(action: {
-                manager.addFriendByEmail()
-            }) {
+            Button(action: manager.addFriendByEmail) {
                 Text("Add Friend")
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -148,8 +173,7 @@ struct AddFriendView: View {
                         Text(email)
                         Spacer()
                         Button(action: {
-                            // Look up UID by email and remove it
-                            self.removeFriendByEmail(email: email, manager: manager)
+                            removeFriendByEmail(email: email)
                         }) {
                             Image(systemName: "trash")
                                 .foregroundColor(.red)
@@ -162,8 +186,8 @@ struct AddFriendView: View {
             manager.fetchFriends()
         }
     }
-
-    private func removeFriendByEmail(email: String, manager: FriendManager) {
+    
+    private func removeFriendByEmail(email: String) {
         let db = Firestore.firestore()
         db.collection("users")
             .whereField("email", isEqualTo: email)
@@ -175,3 +199,62 @@ struct AddFriendView: View {
     }
 }
 
+struct SocialView: View {
+    @StateObject private var activityManager = ActivityManager()
+    @State private var selectedCategory: ActivityCategory = .activity
+    @State private var messageText: String = ""
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Post Activity")
+                    .font(.title2.bold())
+                    .padding(.top)
+                
+                Picker("Category", selection: $selectedCategory) {
+                    ForEach(ActivityCategory.allCases) { category in
+                        Text(category.rawValue).tag(category)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal)
+
+                TextEditor(text: $messageText)
+                    .frame(height: 120)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                    )
+                    .padding(.horizontal)
+
+                Button(action: {
+                    activityManager.postActivity(category: selectedCategory.rawValue, message: messageText)
+                    messageText = ""
+                }) {
+                    Text("Post")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(messageText.isEmpty ? Color.gray : Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                .disabled(messageText.isEmpty)
+
+                if let error = activityManager.errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .padding(.horizontal)
+                }
+
+                Spacer()
+            }
+        }
+    }
+}
+
+struct SocialView_Previews: PreviewProvider {
+    static var previews: some View {
+        SocialView()
+    }
+}
