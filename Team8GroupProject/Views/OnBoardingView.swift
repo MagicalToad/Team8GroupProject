@@ -31,15 +31,17 @@ struct OnboardingView: View {
                         .colorInvert()
                         .opacity(logoAnimate ? 1 : 0)
                         .animation(.easeIn(duration: 1).delay(0.3), value: logoAnimate)
-                    
+                        .colorScheme(.light)
+
                     Text("Track your workouts, set goals, share with friends, and stay motivated!")
                         .font(.body)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
-                        .padding(.top, 10)
+                        .padding(.top, 1)
                         .colorInvert()
                         .opacity(logoAnimate ? 1 : 0)
                         .animation(.easeIn(duration: 1).delay(0.6), value: logoAnimate)
+                        .colorScheme(.light)
                     
                     Spacer().frame(height: 40) // Spacing between text and buttons
                     
