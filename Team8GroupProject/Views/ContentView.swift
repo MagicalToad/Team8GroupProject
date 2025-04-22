@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 // Navigation Target
 enum NavigationTarget: Hashable {
@@ -18,10 +19,12 @@ enum NavigationTarget: Hashable {
 
 // ContentView
 struct ContentView: View {
+    @AppStorage("loggedIn") private var loggedIn = true
     @StateObject var planStore = PlanStore()
+    @StateObject private var activityViewModel = ActivityViewModel()
+    
     @State private var isSidebarVisible = false
     @State private var selectedCategory: NavigationTarget? = .home
-    @StateObject private var activityViewModel = ActivityViewModel()
     
     private let sidebarWidth: CGFloat = UIScreen.main.bounds.width * 0.75
     
@@ -30,7 +33,7 @@ struct ContentView: View {
             ZStack(alignment: .leading) {
                 
                 // Main Content Area
-                CurrentDetailView(selectedCategory: $selectedCategory, toggleSidebar: toggleSidebar)
+               CurrentDetailView(selectedCategory: $selectedCategory, toggleSidebar: toggleSidebar)
                     .environmentObject(activityViewModel)
                     .environmentObject(planStore)
                 
@@ -44,7 +47,7 @@ struct ContentView: View {
                 }
                 
                 // Sidebar
-                SidebarView(selectedCategory: $selectedCategory, onSelectItem: toggleSidebar)
+                SidebarView(selectedCategory: $selectedCategory, onSelectItem: toggleSidebar, onLogout: logout)
                     .frame(width: sidebarWidth)
                     .background(.regularMaterial)
                     .offset(x: isSidebarVisible ? 0 : -sidebarWidth)
@@ -68,9 +71,25 @@ struct ContentView: View {
         
     }
     
+    // Sidebar func
     func toggleSidebar() {
         isSidebarVisible.toggle()
     }
+    
+    // Logout func
+    private func logout() {
+            print("Logging out")
+            if isSidebarVisible {
+                withAnimation { isSidebarVisible = false }
+            }
+            do {
+                try Auth.auth().signOut()
+                print("Successfully signed out.")
+                self.loggedIn = false
+            } catch let signOutError as NSError {
+                print(signOutError)
+            }
+        }
 }
 
 // CurrentDetailView AKA Home
@@ -79,8 +98,6 @@ struct CurrentDetailView: View {
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @Binding var selectedCategory: NavigationTarget?
     @StateObject private var goalsViewModel = GoalsViewModel()
-    
-    @AppStorage("loggedIn") private var loggedIn = false // Log-in state
     
     // Dummy data of 10% --- Needs replaced with dynamic data
     @State private var goalProgress_merged: CGFloat = 0.1
@@ -188,13 +205,13 @@ struct CurrentDetailView: View {
                             Spacer(minLength: 50)
                             
                             // LOG OUT BUTTON - FOR TESTING
-                            Button("Log Out (Debug)", role: .destructive){
-                                loggedIn = false
-                            }
-                            .padding()
-                            .buttonStyle(.borderedProminent)
-                            .foregroundColor(.white)
-                            .colorScheme(.light)
+//                            Button("Log Out (Debug)", role: .destructive){
+//                                loggedIn = false
+//                            }
+//                            .padding()
+//                            .buttonStyle(.borderedProminent)
+//                            .foregroundColor(.white)
+//                            .colorScheme(.light)
                             // --- End Logout Button ---
                             
                         } // End Main VStack for Home

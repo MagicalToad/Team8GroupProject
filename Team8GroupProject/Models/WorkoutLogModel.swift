@@ -21,15 +21,15 @@ struct WorkoutLog: Identifiable, Hashable, Codable {
     let exerciseName: String?
     let sets: Int?
     let reps: Int?
-    let weight: Double? // Stored as kg as default for easier conversion if needed
-    let distance: Double? // Stored as km as default for easier conversion if needed
+    let weight: Double?
+    let distance: Double?
     let notes: String?
     let iconName: String
     
     let userId: String?
     
-    private var milesPerKm = 0.621371
-    private var kgPerLb = 0.45359237
+//    private var milesPerKm = 0.621371
+//    private var kgPerLb = 0.45359237
     
     // Custom initializer
     init(date: Date, type: String, duration: TimeInterval,
@@ -72,22 +72,16 @@ struct WorkoutLog: Identifiable, Hashable, Codable {
         
         // Name
         if let exerciseName = exerciseName, !exerciseName.isEmpty { parts.append(exerciseName) }
-        
         // Sets/Reps
         if let sets = sets, let reps = reps { parts.append("\(sets)x\(reps)") }
-        
         // Weights
-        if let weightKg = weight, weightKg > 0 {
-                let weightLbs = weightKg * 2.2046237 // Conversion to pounds
+        if let weightLbs = weight, weightLbs > 0 {
                 parts.append("\(Int(weightLbs)) lbs") // Display pounds
               }
-        
         // Distance
-        if let distanceKm = distance, distanceKm > 0 {
-               let distanceMiles = distanceKm * milesPerKm // Convert km to miles
-               parts.append("\(distanceMiles.formatted(.number.precision(.fractionLength(1)))) miles") // Display miles
+        if let distanceMiles = distance, distanceMiles > 0 {
+            parts.append("\(distanceMiles.formatted(.number.precision(.fractionLength(1)))) miles") // Display miles
            }
-        
         // Notes
          if let notes = notes, !notes.isEmpty { parts.append("Notes: \(notes)")}
 
