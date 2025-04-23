@@ -226,7 +226,7 @@ struct CurrentDetailView: View {
                 case .planner:
                     PlannerView()
                 case .social:
-                    SocialView()
+                    MainSocialFeedView()
                 case nil:
                     Text("Select an item") // Fallback view
                 }

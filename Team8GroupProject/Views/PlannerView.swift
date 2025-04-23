@@ -200,7 +200,7 @@ struct Plan: Identifiable, Codable {
 class PlanStore: ObservableObject {
     @Published var plans: [Plan] = [] {
         didSet {
-            savePlans()  // This is in scope.
+            savePlans()
         }
     }
     init() {
@@ -210,7 +210,6 @@ class PlanStore: ObservableObject {
     private let plansKey = "savedPlans"
     
     private func savePlans() {
-        // Using 'plans' and 'plansKey' here is valid because this method is inside the class.
         if let data = try? JSONEncoder().encode(plans) {
             UserDefaults.standard.set(data, forKey: plansKey)
         } else {
@@ -239,7 +238,6 @@ class PlanStore: ObservableObject {
 }
 
 extension Date {
-    /// Returns the start of the week for the current date using the current calendar.
     func startOfWeek(using calendar: Calendar = Calendar.current) -> Date? {
         let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
         return calendar.date(from: components)

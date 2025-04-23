@@ -20,6 +20,7 @@ struct UserModel: Identifiable, Codable {
 struct ActivityModel: Identifiable, Codable {
     @DocumentID var id: String?
     var userId: String
+    var username: String
     var category: String
     var message: String
     var timestamp: Date
@@ -33,7 +34,6 @@ enum ActivityCategory: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
 }
 
-// MARK: - Managers
 class FriendManager: ObservableObject {
     private let db = Firestore.firestore()
     
@@ -111,18 +111,22 @@ class FriendManager: ObservableObject {
 class ActivityManager: ObservableObject {
     private let db = Firestore.firestore()
     @Published var errorMessage: String?
+    
 
     func postActivity(category: String, message: String) {
         guard let user = Auth.auth().currentUser else {
             self.errorMessage = "User not authenticated."
             return
         }
+        let uid = user.uid
+        let email = user.email ?? "Unknown"
         let newActivity = ActivityModel(
-            userId: user.uid,
-            category: category,
-            message: message,
-            timestamp: Date()
-        )
+                userId: uid,
+                username: email,
+                category: category,
+                message: message,
+                timestamp: Date()
+            )
         do {
             _ = try db.collection("activities").addDocument(from: newActivity)
             self.errorMessage = nil
@@ -132,7 +136,6 @@ class ActivityManager: ObservableObject {
     }
 }
 
-// MARK: - Views
 struct AddFriendView: View {
     @StateObject private var manager = FriendManager()
     
@@ -150,8 +153,8 @@ struct AddFriendView: View {
                 Text("Add Friend")
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
+                    .background(Color(.systemGray6))
+                    .foregroundColor(.black)
                     .cornerRadius(10)
             }
             .padding(.horizontal)
@@ -199,17 +202,109 @@ struct AddFriendView: View {
     }
 }
 
+struct MainSocialFeedView: View {
+    @StateObject private var friendManager = FriendManager()
+    @State private var friendUIDs: [String] = []
+    @State private var activities: [ActivityModel] = []
+    
+    private let db = Firestore.firestore()
+    
+    var body: some View {
+        VStack {
+            NavigationLink(destination: AddFriendView()) {
+                
+                HStack {
+                    
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add Friends")
+                }
+                .font(.headline)
+                .padding(10)
+                .foregroundColor(.white)
+                .background(Color.blue)
+                .cornerRadius(10)
+                
+                
+                NavigationLink(destination: MyActivityView()) {
+                                    Image(systemName: "person.crop.square")
+                                        .font(.title2)
+                                        .padding(10)
+                                        .foregroundColor(.white)
+                                        .background(Color.blue)
+                                        .cornerRadius(8)
+                                }
+            }
+            
+            
+            .padding(.horizontal)
+            
+            
+            List(activities.sorted(by: { $0.timestamp > $1.timestamp })) { activity in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(activity.username)
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    Text(activity.category)
+                        .font(.headline)
+                    Text(activity.message)
+                        .font(.body)
+                    Text(activity.timestamp, style: .time)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                .padding(.vertical, 6)
+                
+            }
+
+            NavigationLink(destination: SocialView()) {
+                Text("Add Post")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+            }
+        }
+        .onAppear { fetchFriendUIDsAndPosts() }
+    }
+
+    private func fetchFriendUIDsAndPosts() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("users").document(uid).collection("friends").getDocuments { snapshot, error in
+            guard let documents = snapshot?.documents else { return }
+            friendUIDs = documents.compactMap { $0.data()["uid"] as? String }
+
+            guard !friendUIDs.isEmpty else {
+                activities = []
+                return
+            }
+
+            db.collection("activities")
+                .whereField("userId", in: friendUIDs)
+                .order(by: "timestamp", descending: true)
+                .addSnapshotListener { snapshot, error in
+                    if let snapshot = snapshot {
+                        activities = snapshot.documents.compactMap {
+                            try? $0.data(as: ActivityModel.self)
+                        }
+                    }
+                }
+        }
+    }
+}
+
+
 struct SocialView: View {
     @StateObject private var activityManager = ActivityManager()
     @State private var selectedCategory: ActivityCategory = .activity
     @State private var messageText: String = ""
-    
+    @State private var showPostAlert = false
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Post Activity")
-                    .font(.title2.bold())
-                    .padding(.top)
                 
                 Picker("Category", selection: $selectedCategory) {
                     ForEach(ActivityCategory.allCases) { category in
@@ -218,7 +313,7 @@ struct SocialView: View {
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal)
-
+                .padding()
                 TextEditor(text: $messageText)
                     .frame(height: 120)
                     .overlay(
@@ -226,10 +321,12 @@ struct SocialView: View {
                             .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                     )
                     .padding(.horizontal)
+                    
 
                 Button(action: {
                     activityManager.postActivity(category: selectedCategory.rawValue, message: messageText)
                     messageText = ""
+                    showPostAlert = true
                 }) {
                     Text("Post")
                         .frame(maxWidth: .infinity)
@@ -250,8 +347,54 @@ struct SocialView: View {
                 Spacer()
             }
         }
+        .navigationTitle("Post Activity")
+        .alert("Activity Posted!", isPresented: $showPostAlert) {
+            Button("OK") {
+                dismiss()
+            }
+        }
+    }
+        
+}
+
+struct MyActivityView: View {
+    @State private var activities: [ActivityModel] = []
+    private let db = Firestore.firestore()
+
+    var body: some View {
+        List(activities.sorted(by: { $0.timestamp > $1.timestamp })) { activity in
+            VStack(alignment: .leading, spacing: 6) {
+                Text(activity.category)
+                    .font(.headline)
+                Text(activity.message)
+                    .font(.body)
+                Text(activity.timestamp, style: .time)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(.vertical, 6)
+        }
+        .listStyle(PlainListStyle())
+        .navigationTitle("My Activity")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: fetchMyActivities)
+    }
+
+    private func fetchMyActivities() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("activities")
+            .whereField("userId", isEqualTo: uid)
+            .order(by: "timestamp", descending: true)
+            .addSnapshotListener { snapshot, error in
+                if let snapshot = snapshot {
+                    activities = snapshot.documents.compactMap {
+                        try? $0.data(as: ActivityModel.self)
+                    }
+                }
+            }
     }
 }
+
 
 struct SocialView_Previews: PreviewProvider {
     static var previews: some View {
