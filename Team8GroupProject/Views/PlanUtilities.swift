@@ -3,7 +3,6 @@ struct PlanUtilities {
     static func getReminderText(plans: [Plan], now: Date = Date()) -> String {
         let calendar = Calendar.current
         
-        // Filter upcoming plans
         let upcomingPlans = plans.compactMap { plan -> (plan: Plan, scheduled: Date)? in
             if let scheduled = scheduledDate(for: plan, now: now), scheduled >= now {
                 return (plan, scheduled)
@@ -19,7 +18,6 @@ struct PlanUtilities {
         let plan = nextPlan.plan
         let scheduled = nextPlan.scheduled
         
-        // Check if today
         if calendar.isDate(scheduled, inSameDayAs: now) {
             let formatter = DateFormatter()
             formatter.dateFormat = "h:mm a"
@@ -32,7 +30,6 @@ struct PlanUtilities {
                 return "You have a \(plan.selectedPlan) Session Today at \(formatter.string(from: scheduled))"
             }
         } else {
-            // If not today, calculate days remaining
             let diffComponents = calendar.dateComponents([.day], from: now, to: scheduled)
             var daysAway = diffComponents.day ?? 1
             if daysAway == 0 {

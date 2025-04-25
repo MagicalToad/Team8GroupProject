@@ -97,7 +97,6 @@ struct ActivityView: View {
         }
     }
     
-    // MARK: - Preview
     #Preview {
         NavigationStack {
             ActivityView()

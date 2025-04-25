@@ -18,7 +18,7 @@ struct SignUpView: View {
     @State private var isSignedUp = false
 
     var body: some View {
-        NavigationStack { // Make sure to wrap the view in NavigationStack
+        NavigationStack { 
             ZStack {
                 Color.black.edgesIgnoringSafeArea(.all)
                 
@@ -115,7 +115,7 @@ struct SignUpView: View {
                                 }
             }
             .navigationTitle("Sign Up")
-            .navigationBarBackButtonHidden(false) // Back button will show now
+            .navigationBarBackButtonHidden(false)
         }
     }
     

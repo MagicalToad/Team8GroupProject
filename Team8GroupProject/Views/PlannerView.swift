@@ -16,11 +16,9 @@ struct PlannerView: View {
     func scheduledDate(for plan: Plan) -> Date? {
         var calendar = Calendar.current
         let now = Date()
-        // Get the current year and month.
         var components = calendar.dateComponents([.year, .month], from: now)
         components.day = plan.selectedDay
         
-        // Use the plan's time components.
         let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: plan.planTime)
         components.hour = timeComponents.hour
         components.minute = timeComponents.minute
@@ -126,7 +124,7 @@ struct PlannerView: View {
                 }
                 .padding(.horizontal)
                 
-                // Weekly Schedule as simple buttons
+                // Weekly Schedule
                 VStack(alignment: .leading) {
                     Text("This Week")
                         .font(.headline)
@@ -284,7 +282,6 @@ struct DayDetailsView: View {
                 .listStyle(PlainListStyle())
             }
             
-            // Button using original Planner styling
             Button(action: {
                 showAddPlanSheet = true
             }) {
@@ -311,7 +308,6 @@ struct DayDetailsView: View {
         
     }
     
-    // Filter plans for the selected day sorted by time.
     var filteredPlans: [Plan] {
         planStore.plans
             .filter { $0.selectedDay == selectedDay }
@@ -341,7 +337,6 @@ struct DayDetailsView_Previews: PreviewProvider {
     }
 }
 
-// This Changes Views to let the users add a new view depending on the day selected
 
 struct AddPlansView: View {
     var selectedDay: Int
@@ -353,7 +348,6 @@ struct AddPlansView: View {
     let repeatOptions = ["Daily", "Weekly", "Monthly"]
     @State private var selectedRepeatOption = "Weekly"
     
-    // Time picker for the plan
     @State private var selectedTime: Date = Date()
     
     @State private var feedbackMessage = ""
@@ -419,7 +413,7 @@ struct AddPlansView: View {
             
             // Save Button
             Button(action: {
-                savePlan()  // Call the function that creates and saves a plan.
+                savePlan()
             }) {
                 Text("Save Plan")
                     .font(.headline)

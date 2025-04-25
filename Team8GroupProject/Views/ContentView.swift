@@ -77,6 +77,11 @@ struct ContentView: View {
         }.onAppear {
             postViewModel.fetchFriendUIDsAndPosts()  // Fetch posts when the view appears
         }
+        .onReceive(NotificationCenter.default
+                        .publisher(for: .friendsChanged)) { _ in
+              postViewModel.fetchFriendUIDsAndPosts()
+            }
+        
         
     }
     
@@ -117,56 +122,65 @@ struct CurrentDetailView: View {
                 switch selectedCategory {
                 case .home:
                     ScrollView {
-                        VStack(spacing: 15) { // Main stack for home content
+                        VStack(spacing: 15) {
+                            // Main stack for home content
                             
                             // Goals
                             VStack(alignment: .leading) {
                                 Text("My Goals")
                                     .font(.headline)
+                                    .padding(.bottom, 5)
                                 
-                                if goalsViewModel.goals.isEmpty {
-                                    HStack {
-                                        Text("No goals yet")
-                                        Spacer()
-                                    }
-                                    .padding()
-                                    .background(Color(.systemGray6))
-                                    .cornerRadius(10)
-                                } else {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 20) {
-                                            ForEach(goalsViewModel.goals) { goal in
-                                                VStack(spacing: 8) {
-                                                    Text(goal.title)
-                                                        .font(.subheadline.bold())
-                                                        .multilineTextAlignment(.center)
-                                                    ZStack {
-                                                        Circle()
-                                                            .stroke(lineWidth: 6)
-                                                            .foregroundColor(.blue.opacity(0.3))
-                                                        Circle()
-                                                            .trim(from: 0, to: CGFloat(goal.progress) / 100)
-                                                            .stroke(style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                VStack(alignment: .leading) {
+                                    if goalsViewModel.goals.isEmpty {
+                                        HStack {
+                                            Image(systemName: "flag.fill")
+                                                .foregroundColor(.blue)
+                                            Text("No goals yet")
+                                                .foregroundColor(.black)
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Color.white)
+                                        .cornerRadius(10)
+                                        
+                                    } else {
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 20) {
+                                                ForEach(goalsViewModel.goals) { goal in
+                                                    VStack(spacing: 8) {
+                                                        Text(goal.title)
+                                                            .font(.subheadline.bold())
+                                                            .multilineTextAlignment(.center)
+                                                        ZStack {
+                                                            Circle()
+                                                                .stroke(lineWidth: 6)
+                                                                .foregroundColor(.blue.opacity(0.3))
+                                                            Circle()
+                                                                .trim(from: 0, to: CGFloat(goal.progress) / 100)
+                                                                .stroke(style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                                                .foregroundColor(.blue)
+                                                                .rotationEffect(.degrees(-90))
+                                                        }
+                                                        .frame(width: 60, height: 60)
+                                                        Text("\(goal.progress)%")
+                                                            .font(.caption)
                                                             .foregroundColor(.blue)
-                                                            .rotationEffect(.degrees(-90))
                                                     }
-                                                    .frame(width: 60, height: 60)
-                                                    Text("\(goal.progress)%")
-                                                        .font(.caption)
-                                                        .foregroundColor(.blue)
+                                                    .padding()
+                                                    .background(Color(.systemGray6))
+                                                    .cornerRadius(15)
                                                 }
-                                                .padding()
-                                                .background(Color(.systemGray6))
-                                                .cornerRadius(15)
                                             }
                                         }
                                     }
                                 }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(10)
                             }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top)
-
+                            .padding(.horizontal)
                             
                             // Reminders
                             VStack(alignment: .leading) {
@@ -175,7 +189,7 @@ struct CurrentDetailView: View {
                                     .padding(.bottom, 5)
                                 VStack(alignment: .leading) {
                                     HStack {
-                                        Image(systemName: "bell.fill").foregroundColor(.yellow)
+                                        Image(systemName: "bell.fill").foregroundColor(.blue)
                                         Text(planStore.plans.isEmpty ? "No reminders yet" : PlanUtilities.getReminderText(plans: planStore.plans))
                                         
                                         Spacer()
@@ -196,31 +210,47 @@ struct CurrentDetailView: View {
                             VStack(alignment: .leading) {
                                 Text("Friend Activity")
                                     .font(.headline)
-                                    .padding([.leading, .top])
-                                VStack(alignment: .leading, spacing: 10) {
-                                    ForEach(postViewModel.activities.prefix(3)) { activity in
-                                                                    VStack(alignment: .leading, spacing: 10) {
-                                                                        Text(activity.username)
-                                                                            .font(.caption)
-                                                                        Text(activity.category)
-                                                                            .font(.headline)
-                                                                        Text(activity.message)
-                                                                            .font(.body)
-                                                                        Text(activity.timestamp, style: .date)
-                                                                            .font(.caption)
-                                                                    }
-                                                                    .padding()
-                                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                                                    .background(Color.white)
-                                                                    .cornerRadius(10)
-                                                                    
-                                                                }
+                                    .padding(.bottom, 5)
+                                VStack(alignment: .leading) {
+                                    if postViewModel.activities.isEmpty {
+                                        HStack {
+                                            Image(systemName: "person.2.fill")
+                                                .foregroundColor(.blue)
+                                            Text("No friend activity yet")
+                                                .foregroundColor(.black)
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Color.white)
+                                        .cornerRadius(10)
+                                        
+                                    } else {
+                                        VStack(alignment: .leading, spacing: 10) {
+                                            ForEach(postViewModel.activities.prefix(3)) { activity in
+                                                VStack(alignment: .leading, spacing: 10) {
+                                                    Text(activity.username)
+                                                        .font(.caption)
+                                                    Text(activity.category)
+                                                        .font(.headline)
+                                                    Text(activity.message)
+                                                        .font(.body)
+                                                    Text(activity.timestamp, style: .date)
+                                                        .font(.caption)
+                                                }
+                                                .padding()
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .background(Color.white)
+                                                .cornerRadius(10)
+                                            }
+                                        }
+                                    }
                                 }
                                 .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Color(.systemGray6))
                                 .cornerRadius(10)
                             }
+
                             .padding(.horizontal)
                             
                             // Activity
@@ -301,6 +331,13 @@ struct CurrentDetailView: View {
             }
         }
         .tint(Color.primary)
+        .onAppear {
+              postViewModel.fetchFriendUIDsAndPosts()
+            }
+        .onReceive(NotificationCenter.default
+                        .publisher(for: .friendsChanged)) { _ in
+              postViewModel.fetchFriendUIDsAndPosts()
+            }
     }
     
     // Navigation titles
@@ -317,7 +354,6 @@ struct CurrentDetailView: View {
 }
 
 
-// MARK: - Previews
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()

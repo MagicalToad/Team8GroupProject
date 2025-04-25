@@ -43,7 +43,7 @@ struct OnboardingView: View {
                         .animation(.easeIn(duration: 1).delay(0.6), value: logoAnimate)
                         .colorScheme(.light)
                     
-                    Spacer().frame(height: 40) // Spacing between text and buttons
+                    Spacer().frame(height: 40)
                     
                     // Sign In and Sign Up buttons
                     VStack(spacing: 20) {

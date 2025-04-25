@@ -11,7 +11,7 @@ import FirebaseFirestore
 
 import Combine
 
-// MARK: - Models
+
 struct UserModel: Identifiable, Codable {
     @DocumentID var id: String?
     var email: String
@@ -32,6 +32,11 @@ enum ActivityCategory: String, CaseIterable, Identifiable {
     case activity = "Activity"
     
     var id: String { self.rawValue }
+}
+
+
+extension Notification.Name {
+  static let friendsChanged = Notification.Name("friendsChanged")
 }
 
 class FriendManager: ObservableObject {
@@ -89,9 +94,13 @@ class FriendManager: ObservableObject {
                         } else {
                             self.friendEmailInput = ""
                             self.errorMessage = nil
+                            NotificationCenter.default.post(name: .friendsChanged, object: nil)
                         }
                     }
             }
+        
+
+        
     }
 
     func removeFriend(uid: String) {
@@ -103,8 +112,13 @@ class FriendManager: ObservableObject {
             .delete { error in
                 if let error = error {
                     self.errorMessage = "Failed to remove friend: \(error.localizedDescription)"
+                    
+                }
+                else {
+                    NotificationCenter.default.post(name: .friendsChanged, object: nil)
                 }
             }
+        
     }
 }
 

@@ -24,8 +24,10 @@ class PostViewModel: ObservableObject {
     
     @Published var activities: [ActivityModel] = []
     @Published var errorMessage: String?
+    @Published var friendListDidChange = false
+
     
-    private var friendUIDs: [String] = []
+    @Published private var friendUIDs: [String] = []
     
     func fetchFriendUIDsAndPosts() {
             guard let uid = Auth.auth().currentUser?.uid else {
@@ -69,7 +71,6 @@ class PostViewModel: ObservableObject {
                         return
                     }
                     
-                    // Map the snapshot documents to ActivityModel
                     self.activities = snapshot.documents.compactMap { document in
                         try? document.data(as: ActivityModel.self)
                     }

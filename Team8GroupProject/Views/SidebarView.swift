@@ -75,7 +75,7 @@ struct SidebarView: View {
     }
 }
     
-    // MARK: - Preview for SidebarView
+
     struct SidebarView_Previews: PreviewProvider {
         @State static var previewSelection: NavigationTarget? = .home
         

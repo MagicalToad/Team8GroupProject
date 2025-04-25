@@ -89,8 +89,6 @@ struct SignInView: View {
             if let error = error {
                 errorMessage = error.localizedDescription
             } else {
-                // flip the AppStorage key — this will automatically
-                // rebuild your App's WindowGroup to show ContentView()
                 loggedIn = true
             }
         }

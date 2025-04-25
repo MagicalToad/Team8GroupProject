@@ -78,8 +78,8 @@ class GoalsViewModel: ObservableObject {
 
 // Main View: Shows current goals, button to add new goals, achievements, and chart
 struct GoalsView: View {
-    @EnvironmentObject var vm: GoalsViewModel  // Shared state object
-    @State private var showingAdd = false           // Controls display of the add-goal sheet
+    @EnvironmentObject var vm: GoalsViewModel
+    @State private var showingAdd = false
 
     var body: some View {
         NavigationStack {
@@ -160,8 +160,8 @@ struct CurrentGoalsSection: View {
 // A single goal card with a circular progress indicator and remove button
 struct GoalCard: View {
     var goal: Goal
-    var onUpdate: (Int) -> Void  // Callback when progress is edited
-    var onRemove: () -> Void     // Callback when the remove button is tapped
+    var onUpdate: (Int) -> Void
+    var onRemove: () -> Void
 
     @State private var editing = false
     @State private var tempProgress: Double = 0
@@ -221,7 +221,6 @@ struct GoalCard: View {
         .frame(width: 150)
         .background(Color(.systemGray6))
         .cornerRadius(20)
-        // Overlay a red X button in the top-right corner to remove the goal
         .overlay(alignment: .topTrailing) {
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
@@ -312,8 +311,8 @@ struct AddGoalView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var vm: GoalsViewModel
 
-    @State private var title = ""                   // TextField binding
-    @State private var icon: String = "figure.walk" // Default icon selection
+    @State private var title = ""
+    @State private var icon: String = "figure.walk" 
     // List of workout icons with friendly labels
     let iconOptions: [(label: String, symbol: String)] = [
         ("Walk",                        "figure.walk"),
