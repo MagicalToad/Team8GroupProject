@@ -61,11 +61,15 @@ struct PlannerView: View {
                 return "You have a \(plan.selectedPlan) Session Today at \(formatter.string(from: scheduled))"
             }
         } else {
-            var diffComponents = calendar.dateComponents([.day], from: now, to: scheduled)
-            if diffComponents.day == 0 {
-                diffComponents.day = 1
+            let diffComponents = calendar.dateComponents([.day], from: now, to: scheduled)
+            
+            var daysAway = diffComponents.day ?? 1
+            if daysAway == 0 {
+                daysAway = 1
             }
-            let daysAway = diffComponents.day ?? 1
+            else{
+                daysAway = daysAway + 1
+            }
             if plan.selectedPlan == "Workout" {
                 return "You have a \(plan.selectedPlan) in \(daysAway) day\(daysAway == 1 ? "" : "s")"
             }
@@ -371,10 +375,11 @@ struct AddPlansView: View {
                     Text(plan)
                 }
             }
+            .frame(maxWidth: .infinity)
             .pickerStyle(MenuPickerStyle())
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .cornerRadius(10)
             
             // Custom description field
             Text("Custom Description (Optional)")
@@ -382,7 +387,7 @@ struct AddPlansView: View {
             TextField("Enter custom description", text: $customDescription)
                 .padding(10)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .cornerRadius(10)
             
             // Time Picker
             Text("Select Time")
@@ -391,13 +396,14 @@ struct AddPlansView: View {
                 .datePickerStyle(CompactDatePickerStyle())
                 .padding()
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .cornerRadius(10)
             
             // Repeat options
             Toggle("Repeat Plan", isOn: $repeatPlan)
                 .padding(.horizontal)
                 .background(Color(.systemGray6))
                 .foregroundColor(.black)
+                .cornerRadius(10)
                 .tint(.blue)
             if repeatPlan {
                 Text("Repeat Frequency")
@@ -421,7 +427,7 @@ struct AddPlansView: View {
                     .padding()
                     .background(Color(.systemGray6))
                     .foregroundColor(.black)
-                    .cornerRadius(12)
+                    .cornerRadius(10)
             }
             .padding(.top)
             

@@ -1,60 +1,78 @@
+//
+//  PostViewModel.swift
+//  Team8GroupProject
+//
+//  Created by Thoene, Zachary on 4/24/25.
+//
+
+
 import FirebaseFirestore
 import FirebaseAuth
 import SwiftUI
 
+struct Post: Identifiable {
+    var id: String
+    var category: String
+    var message: String
+    var timestamp: Date
+    var userEmail: String
+}
+
+
 class PostViewModel: ObservableObject {
-    @Published var posts: [Post] = []
+    private let db = Firestore.firestore()
     
-    private var db = Firestore.firestore()
+    @Published var activities: [ActivityModel] = []
+    @Published var errorMessage: String?
     
-    // Fetch posts from Firestore
-    func fetchPosts() {
-        guard let userEmail = Auth.auth().currentUser?.email else {
-            return
-        }
-        
-        db.collection("posts")
-            .whereField("userEmail", isEqualTo: userEmail)
-            .order(by: "timestamp", descending: true)
-            .getDocuments { [weak self] snapshot, error in
+    private var friendUIDs: [String] = []
+    
+    func fetchFriendUIDsAndPosts() {
+            guard let uid = Auth.auth().currentUser?.uid else {
+                errorMessage = "User not authenticated."
+                return
+            }
+            
+            // Fetch the list of friend UID's
+            db.collection("users").document(uid).collection("friends").getDocuments { snapshot, error in
                 if let error = error {
-                    print("Error fetching posts: \(error.localizedDescription)")
+                    self.errorMessage = "Error fetching friends: \(error.localizedDescription)"
                     return
                 }
-                
                 guard let documents = snapshot?.documents else {
-                    print("No posts found.")
+                    self.errorMessage = "No friends found."
                     return
                 }
+                self.friendUIDs = documents.compactMap { $0.data()["uid"] as? String }
                 
-                self?.posts = documents.map { document -> Post in
-                    let data = document.data()
-                    let id = document.documentID
-                    let category = data["category"] as? String ?? "General"
-                    let message = data["message"] as? String ?? ""
-                    let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
-                    let userEmail = data["userEmail"] as? String ?? ""
-                    
-                    return Post(id: id, category: category, message: message, timestamp: timestamp, userEmail: userEmail)
+                // Fetch the activities of friends
+                if !self.friendUIDs.isEmpty {
+                    self.fetchActivitiesFromFriends()
+                } else {
+                    self.activities = []
                 }
-            }
-    }
-    
-    // Add new post
-    func addPost(category: String, message: String) {
-        guard let userEmail = Auth.auth().currentUser?.email else { return }
-        
-        db.collection("posts").addDocument(data: [
-            "category": category,
-            "message": message,
-            "timestamp": Timestamp(),
-            "userEmail": userEmail
-        ]) { [weak self] error in
-            if let error = error {
-                print("Error adding post: \(error.localizedDescription)")
-            } else {
-                self?.fetchPosts()  // Fetch posts after adding new one
             }
         }
-    }
+        
+        private func fetchActivitiesFromFriends() {
+            db.collection("activities")
+                .whereField("userId", in: friendUIDs)
+                .order(by: "timestamp", descending: true)
+                .addSnapshotListener { snapshot, error in
+                    if let error = error {
+                        self.errorMessage = "Error fetching activities: \(error.localizedDescription)"
+                        return
+                    }
+                    
+                    guard let snapshot = snapshot else {
+                        self.errorMessage = "No activities found."
+                        return
+                    }
+                    
+                    // Map the snapshot documents to ActivityModel
+                    self.activities = snapshot.documents.compactMap { document in
+                        try? document.data(as: ActivityModel.self)
+                    }
+                }
+        }
 }

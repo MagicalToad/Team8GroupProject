@@ -33,12 +33,14 @@ struct PlanUtilities {
             }
         } else {
             // If not today, calculate days remaining
-            var diffComponents = calendar.dateComponents([.day], from: now, to: scheduled)
-            if diffComponents.day == 0 {
-                diffComponents.day = 1
+            let diffComponents = calendar.dateComponents([.day], from: now, to: scheduled)
+            var daysAway = diffComponents.day ?? 1
+            if daysAway == 0 {
+                daysAway = 1
             }
-            let daysAway = diffComponents.day ?? 0
-            
+            else{
+                daysAway = daysAway + 1
+            }
             if plan.selectedPlan == "Workout" {
                 return "You have a \(plan.selectedPlan) in \(daysAway) day\(daysAway == 1 ? "" : "s")"
             } else if plan.selectedPlan == "Eat" {
