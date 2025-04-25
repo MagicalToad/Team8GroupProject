@@ -5,14 +5,6 @@
 //  Created by Thoene, Zachary on 4/12/25.
 //
 
-
-//
-//  SignUpView.swift
-//  Team8GroupProject
-//
-//  Created by Thoene, Zachary on 4/10/25.
-//
-
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore

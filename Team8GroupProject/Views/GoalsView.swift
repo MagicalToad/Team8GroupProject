@@ -8,7 +8,6 @@
 import SwiftUI
 import Charts
 
-// Define the data structures used throughout the app
 struct Goal: Identifiable {
     let id = UUID()            // Unique identifier for each goal
     var title: String          // The name or description of the goal

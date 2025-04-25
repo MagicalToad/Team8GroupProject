@@ -152,7 +152,7 @@ struct PlannerView: View {
                 }
                 .padding(.horizontal)
                 
-                // Monthly Calendar (remains unchanged)
+                // Monthly Calendar
                 VStack(alignment: .leading) {
                     Text("This Month")
                         .font(.headline)
@@ -187,7 +187,7 @@ struct PlannerView: View {
 }
 
 
-// MARK This is Where the Plan information will be stored and how to add plans to the planner
+// This is Where the Plan information will be stored and how to add plans to the planner
 
 
 struct Plan: Identifiable, Codable {
