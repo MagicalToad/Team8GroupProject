@@ -22,6 +22,7 @@ struct ContentView: View {
     @AppStorage("loggedIn") private var loggedIn = true
     @StateObject var planStore = PlanStore()
     @StateObject private var activityViewModel = ActivityViewModel()
+    @StateObject private var goalsViewModel = GoalsViewModel()
     @StateObject private var postViewModel = PostViewModel()
 
     
@@ -38,6 +39,7 @@ struct ContentView: View {
                CurrentDetailView(selectedCategory: $selectedCategory, toggleSidebar: toggleSidebar)
                     .environmentObject(activityViewModel)
                     .environmentObject(planStore)
+                    .environmentObject(goalsViewModel)
                     .environmentObject(postViewModel)
                 
                 // Dims when sidebar is showing
@@ -57,6 +59,7 @@ struct ContentView: View {
                     .transition(.move(edge: .leading))
                     .zIndex(2)
                     .environmentObject(activityViewModel)
+                    .environmentObject(goalsViewModel)
                     .environmentObject(postViewModel)
                 
             }
@@ -104,10 +107,7 @@ struct CurrentDetailView: View {
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @EnvironmentObject var postViewModel: PostViewModel
     @Binding var selectedCategory: NavigationTarget?
-    @StateObject private var goalsViewModel = GoalsViewModel()
-    
-    // Dummy data of 10% --- Needs replaced with dynamic data
-    @State private var goalProgress_merged: CGFloat = 0.1
+    @EnvironmentObject var goalsViewModel: GoalsViewModel
     
     var toggleSidebar: () -> Void
     
@@ -120,25 +120,53 @@ struct CurrentDetailView: View {
                         VStack(spacing: 15) { // Main stack for home content
                             
                             // Goals
-                            VStack {
-                                Text("Goal 1") // Dummy data --- needs to be replaced with dynamic data
+                            VStack(alignment: .leading) {
+                                Text("My Goals")
                                     .font(.headline)
-                                ZStack {
-                                    Circle()
-                                        .stroke(lineWidth: 8)
-                                        .foregroundColor(.blue.opacity(0.3))
-                                    Circle()
-                                        .trim(from: 0, to: goalProgress_merged)
-                                        .stroke(style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                                        .foregroundColor(.blue)
-                                        .rotationEffect(Angle(degrees: -90))
-                                    Text("\(Int(goalProgress_merged * 100))%")
-                                        .font(.title.bold())
-                                        .contentTransition(.numericText())
+                                
+                                if goalsViewModel.goals.isEmpty {
+                                    HStack {
+                                        Text("No goals yet")
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(10)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 20) {
+                                            ForEach(goalsViewModel.goals) { goal in
+                                                VStack(spacing: 8) {
+                                                    Text(goal.title)
+                                                        .font(.subheadline.bold())
+                                                        .multilineTextAlignment(.center)
+                                                    ZStack {
+                                                        Circle()
+                                                            .stroke(lineWidth: 6)
+                                                            .foregroundColor(.blue.opacity(0.3))
+                                                        Circle()
+                                                            .trim(from: 0, to: CGFloat(goal.progress) / 100)
+                                                            .stroke(style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                                            .foregroundColor(.blue)
+                                                            .rotationEffect(.degrees(-90))
+                                                    }
+                                                    .frame(width: 60, height: 60)
+                                                    Text("\(goal.progress)%")
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .padding()
+                                                .background(Color(.systemGray6))
+                                                .cornerRadius(15)
+                                            }
+                                        }
+                                    }
                                 }
-                                .frame(width: 150, height: 100)
-                                .padding()
                             }
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top)
+
                             
                             // Reminders
                             VStack(alignment: .leading) {
@@ -252,7 +280,6 @@ struct CurrentDetailView: View {
                     ActivityView()
                 case .goals:
                     GoalsView()
-                        .environmentObject(goalsViewModel)
                 case .planner:
                     PlannerView()
                 case .social:
@@ -294,7 +321,8 @@ struct CurrentDetailView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-            .environmentObject(ActivityViewModel());
+            .environmentObject(ActivityViewModel())
+            .environmentObject(GoalsViewModel())
     }
 }
 
