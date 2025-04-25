@@ -61,6 +61,7 @@ struct ActivityView: View {
                     showingAddSheet = true // Set state to true to show the sheet
                 } label: {
                     Label("Add Workout", systemImage: "plus")
+                    
                 }
             }
         }

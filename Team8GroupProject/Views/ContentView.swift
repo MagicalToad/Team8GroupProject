@@ -23,6 +23,8 @@ struct ContentView: View {
     @StateObject var planStore = PlanStore()
     @StateObject private var activityViewModel = ActivityViewModel()
     @StateObject private var goalsViewModel = GoalsViewModel()
+    @StateObject private var postViewModel = PostViewModel()
+
     
     @State private var isSidebarVisible = false
     @State private var selectedCategory: NavigationTarget? = .home
@@ -38,6 +40,7 @@ struct ContentView: View {
                     .environmentObject(activityViewModel)
                     .environmentObject(planStore)
                     .environmentObject(goalsViewModel)
+                    .environmentObject(postViewModel)
                 
                 // Dims when sidebar is showing
                 if isSidebarVisible {
@@ -57,6 +60,7 @@ struct ContentView: View {
                     .zIndex(2)
                     .environmentObject(activityViewModel)
                     .environmentObject(goalsViewModel)
+                    .environmentObject(postViewModel)
                 
             }
             .animation(.easeInOut, value: isSidebarVisible)
@@ -70,6 +74,8 @@ struct ContentView: View {
                         }
                     }
             )
+        }.onAppear {
+            postViewModel.fetchFriendUIDsAndPosts()  // Fetch posts when the view appears
         }
         
     }
@@ -99,6 +105,7 @@ struct ContentView: View {
 struct CurrentDetailView: View {
     @EnvironmentObject var planStore: PlanStore
     @EnvironmentObject var activityViewModel: ActivityViewModel
+    @EnvironmentObject var postViewModel: PostViewModel
     @Binding var selectedCategory: NavigationTarget?
     @EnvironmentObject var goalsViewModel: GoalsViewModel
     
@@ -166,26 +173,48 @@ struct CurrentDetailView: View {
                                 Text("Reminders")
                                     .font(.headline)
                                     .padding(.bottom, 5)
-                                HStack {
-                                    Image(systemName: "bell.fill").foregroundColor(.yellow)
-                                    Text(planStore.plans.isEmpty ? "No reminders yet" : PlanUtilities.getReminderText(plans: planStore.plans))
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        Image(systemName: "bell.fill").foregroundColor(.yellow)
+                                        Text(planStore.plans.isEmpty ? "No reminders yet" : PlanUtilities.getReminderText(plans: planStore.plans))
+                                        
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.white)
+                                    .cornerRadius(10)
                                     
-                                    Spacer()
                                 }
                                 .padding()
                                 .background(Color(.systemGray6))
                                 .cornerRadius(10)
+                                
                             }
                             .padding(.horizontal)
-                            
                             // Friend activity
                             VStack(alignment: .leading) {
                                 Text("Friend Activity")
                                     .font(.headline)
                                     .padding([.leading, .top])
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text("Example Text") // dummy data --- needs replace
-                                        .font(.footnote)
+                                    ForEach(postViewModel.activities.prefix(3)) { activity in
+                                                                    VStack(alignment: .leading, spacing: 10) {
+                                                                        Text(activity.username)
+                                                                            .font(.caption)
+                                                                        Text(activity.category)
+                                                                            .font(.headline)
+                                                                        Text(activity.message)
+                                                                            .font(.body)
+                                                                        Text(activity.timestamp, style: .date)
+                                                                            .font(.caption)
+                                                                    }
+                                                                    .padding()
+                                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                                    .background(Color.white)
+                                                                    .cornerRadius(10)
+                                                                    
+                                                                }
                                 }
                                 .padding()
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -195,20 +224,20 @@ struct CurrentDetailView: View {
                             .padding(.horizontal)
                             
                             // Activity
+                            
                             VStack(alignment: .leading) {
-                                HStack {
-                                    Text("Recent Activity")
-                                        .font(.headline)
-                                        .foregroundColor(Color.white)
-                                    Spacer()
-                                }
-                                .padding(.bottom, 5)
+                                Text("Recent Activity")
+                                    .font(.headline)
+                                    .padding([.leading, .top])
                                 
                                 if activityViewModel.workouts.isEmpty {
                                     Text("No workouts logged yet.")
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(Color.black)
                                         .padding(.vertical)
                                         .frame(maxWidth: .infinity, alignment: .center)
+                                        .background(Color(.systemGray6))
+                                        .cornerRadius(10)
+                                        .padding(.horizontal)
                                     
                                 } else {
                                     // Display first 3 workouts with ActivityRow component
@@ -222,13 +251,14 @@ struct CurrentDetailView: View {
                                                     .padding(.leading)
                                             }
                                         }
+                                        .padding()
+                                        .background(Color(.systemGray6))
+                                        .cornerRadius(10)
+                                        .padding(.horizontal)
                                     }
                                 }
                             }
-                            .padding()
-                            .background(Color(.black))
-                            .cornerRadius(10)
-                            .padding(.horizontal)
+                            
                             
                             Spacer(minLength: 50)
                             

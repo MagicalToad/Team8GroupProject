@@ -220,8 +220,8 @@ struct MainSocialFeedView: View {
                 }
                 .font(.headline)
                 .padding(10)
-                .foregroundColor(.white)
-                .background(Color.blue)
+                .foregroundColor(.blue)
+                .background(Color.blue.opacity(0.1))
                 .cornerRadius(10)
                 
                 
@@ -229,12 +229,13 @@ struct MainSocialFeedView: View {
                                     Image(systemName: "person.crop.square")
                                         .font(.title2)
                                         .padding(10)
-                                        .foregroundColor(.white)
-                                        .background(Color.blue)
+                                        .foregroundColor(.blue)
+                                        .background(Color.blue.opacity(0.1))
                                         .cornerRadius(8)
                                 }
+                .background(Color(.systemGray6))
             }
-            
+            .background(Color(.systemGray6))
             
             .padding(.horizontal)
             
@@ -246,11 +247,13 @@ struct MainSocialFeedView: View {
                         .foregroundColor(.gray)
                     Text(activity.category)
                         .font(.headline)
+                        .foregroundColor(.black)
                     Text(activity.message)
                         .font(.body)
+                        .foregroundColor(.black)
                     Text(activity.timestamp, style: .time)
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.black)
                 }
                 .padding(.vertical, 6)
                 
@@ -260,14 +263,18 @@ struct MainSocialFeedView: View {
                 Text("Add Post")
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .padding(.horizontal)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .cornerRadius(15)
             }
+            .background(Color(.systemGray6))
         }
+        .foregroundColor(Color(.systemGray6))
+        .background(Color(.systemGray6))
         .onAppear { fetchFriendUIDsAndPosts() }
     }
+        
+
 
     private func fetchFriendUIDsAndPosts() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
